@@ -1,6 +1,7 @@
 import time
 import os
 import datetime
+import logging
 import csv
 
 
@@ -8,46 +9,72 @@ class ProcessFile:
     def __init__(self, filename: str, working_dir: str):
         self.filename: str = filename
         self.working_dir: str = working_dir
+        self.logger = logging.getLogger()
 
     async def computation(self) -> None:
         """
         Computes
         """
-        time.sleep(1)
-        csv_file_data = self.process_new_file()
-        self.save_to_csv_file(csv_file_data)
+        try:
+            time.sleep(1)
+            csv_file_data = self.process_new_file()
+            self.save_to_csv_file(csv_file_data)
+            self.logger.info(f"Done processing file: {self.filename}")
+        except:
+            self.logger.error(f"Error occurred while processing {self.filename}")
+
+    def get_field(self, name: str, value: str) -> int:
+        """
+        checks if the data is of integer type
+        """
+        try:
+            float(value.replace(",", ""))
+            return value
+        except ValueError:
+            self.logger.error(
+                f"Error occurred while processing {self.filename}, Could not convert {name} to an integer")
+            raise Exception(f"Could not convert {name} to an integer")
 
     def process_new_file(self):
         """
         process the newly added file and calculates the roas
         returns a csv file data
         """
-        with open(self.get_working_dir() + "/" + self.get_filename(), encoding="utf8", errors="ignore") as file:
-            currency_terms = {}
-            skip_first_line = 0
-            for line in file:
-                if skip_first_line != 0:
-                    remove_whitespace = line.strip().split(";")
-                    search_term = remove_whitespace[0]
-                    clicks = remove_whitespace[5]
-                    impressions = remove_whitespace[8]
-                    con_value = remove_whitespace[10]
-                    cost = remove_whitespace[7]
-                    currency = remove_whitespace[6]
-                    roas = self.weird_division(
-                        con_value.replace(",", ""), cost.replace(",", "")
-                    )
-                    if currency not in currency_terms:
-                        currency_terms[currency] = [
-                            [search_term, clicks, cost, impressions, con_value, roas]
-                        ]
-                    else:
-                        currency_terms[currency].append(
-                            [search_term, clicks, cost, impressions, con_value, roas]
+        self.logger.info(f"Processing file: {self.filename}")
+        with open(
+                self.get_working_dir() + "/" + self.get_filename(),
+                encoding="utf8",
+                errors="ignore",
+        ) as file:
+            try:
+                currency_terms = {}
+                skip_first_line = 0
+                for line in file:
+                    if skip_first_line != 0:
+                        file_data = line.strip().split(";")
+                        search_term = file_data[0]
+                        clicks = self.get_field("clicks", file_data[5])
+                        impressions = self.get_field("impressions", file_data[8])
+                        con_value = self.get_field("conversion value", file_data[10])
+                        cost = self.get_field("cost", file_data[7])
+                        currency = file_data[6]
+                        roas = self.weird_division(
+                            con_value.replace(",", ""), cost.replace(",", "")
                         )
+                        if currency not in currency_terms:
+                            currency_terms[currency] = [
+                                [search_term, clicks, cost, impressions, con_value, roas]
+                            ]
+                        else:
+                            currency_terms[currency].append(
+                                [search_term, clicks, cost, impressions, con_value, roas]
+                            )
 
-                skip_first_line += 1
-            return currency_terms
+                    skip_first_line += 1
+                return currency_terms
+            except IndexError:
+                self.logger.error(f" list index out of range while processing file: {self.filename}")
+                raise Exception(f" list index out of range while processing file: {self.filename}")
 
     def save_to_csv_file(self, currency_terms) -> None:
         """

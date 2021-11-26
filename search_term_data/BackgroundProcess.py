@@ -4,23 +4,25 @@ from typing import List
 import asyncio
 
 from search_term_data.ProcessFile import ProcessFile
+import logging
 
 
 class BackgroundProcess:
     def __init__(self):
         self.new_files: List[str] = []
         self.working_dir: str = os.getcwd()
+        self.logger = logging.getLogger()
 
     def listening_for_new_files(self) -> None:
         """
         Daemon part that listens for newly added files and class ProcessFile
         """
+
         before = dict([(f, None) for f in self.filter_by_csv()])
         while True:
             after = dict([(f, None) for f in self.filter_by_csv()])
             added = [f for f in after if not f in before]
             if added:
-                print(added)
                 for file in added:
                     process_file = ProcessFile(file, self.get_working_dir())
                     asyncio.run(process_file.computation())
@@ -38,8 +40,18 @@ class BackgroundProcess:
         """
         Start the daemon
         """
-        with daemon.DaemonContext():
-            self.listening_for_new_files()
+
+        fh = self.logger.handlers[0]
+
+        try:
+            with daemon.DaemonContext(
+                files_preserve=[
+                    fh.stream,
+                ],
+            ):
+                self.listening_for_new_files()
+        except Exception as e:
+            self.logger.info(f"{e} {str(e)}")
 
     def get_working_dir(self) -> str:
         """
