@@ -25,7 +25,7 @@
 
 	$ make run
 	
-##Pip Installation
+## Pip Installation
 
 	$ pip install search-term-data==0.3
 	
