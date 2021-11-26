@@ -24,6 +24,11 @@
 #####Once you have the source you can test the program by running
 
 	$ make run
+	
+##Pip Installation
+
+	$ pip install search-term-data==0.3
+	
 
 
 
