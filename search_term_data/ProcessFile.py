@@ -32,7 +32,8 @@ class ProcessFile:
             return value
         except ValueError:
             self.logger.error(
-                f"Error occurred while processing {self.filename}, Could not convert {name} to an integer")
+                f"Error occurred while processing {self.filename}, Could not convert {name} to an integer"
+            )
             raise Exception(f"Could not convert {name} to an integer")
 
     def process_new_file(self):
@@ -42,9 +43,9 @@ class ProcessFile:
         """
         self.logger.info(f"Processing file: {self.filename}")
         with open(
-                self.get_working_dir() + "/" + self.get_filename(),
-                encoding="utf8",
-                errors="ignore",
+            self.get_working_dir() + "/" + self.get_filename(),
+            encoding="utf8",
+            errors="ignore",
         ) as file:
             try:
                 currency_terms = {}
@@ -63,18 +64,36 @@ class ProcessFile:
                         )
                         if currency not in currency_terms:
                             currency_terms[currency] = [
-                                [search_term, clicks, cost, impressions, con_value, roas]
+                                [
+                                    search_term,
+                                    clicks,
+                                    cost,
+                                    impressions,
+                                    con_value,
+                                    roas,
+                                ]
                             ]
                         else:
                             currency_terms[currency].append(
-                                [search_term, clicks, cost, impressions, con_value, roas]
+                                [
+                                    search_term,
+                                    clicks,
+                                    cost,
+                                    impressions,
+                                    con_value,
+                                    roas,
+                                ]
                             )
 
                     skip_first_line += 1
                 return currency_terms
             except IndexError:
-                self.logger.error(f" list index out of range while processing file: {self.filename}")
-                raise Exception(f" list index out of range while processing file: {self.filename}")
+                self.logger.error(
+                    f" list index out of range while processing file: {self.filename}"
+                )
+                raise Exception(
+                    f" list index out of range while processing file: {self.filename}"
+                )
 
     def save_to_csv_file(self, currency_terms) -> None:
         """
