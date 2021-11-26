@@ -1,6 +1,6 @@
 ## Overview
 
-    Our system ingests search term data from Google Adwords into a S3 Data Lake, one possible format is CSV.
+    The system ingests search term data from Google Adwords into a S3 Data Lake, one possible format is CSV.
     
     Once ingested we score each search term with its Return On Ad Spend (ROAS). 
     
